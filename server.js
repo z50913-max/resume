@@ -34,6 +34,62 @@ app.get('/api/default-data', (req, res) => {
   res.json(data);
 });
 
+// API: 预览简历（生成 HTML）
+app.post('/api/preview', async (req, res) => {
+  try {
+    const data = req.body;
+
+    // 生成简单的 HTML 预览
+    const html = generatePreviewHTML(data);
+    res.send(html);
+  } catch (error) {
+    console.error('预览错误:', error);
+    res.status(500).send(`<h1>预览失败</h1><p>${error.message}</p>`);
+  }
+});
+
+// 生成预览 HTML（使用实际的 CSS 样式）
+function generatePreviewHTML(data) {
+  const pug = require('pug');
+  const { generatePugFile } = require('./lib/pug-generator');
+
+  try {
+    // 生成 Pug 内容
+    const pugContent = generatePugFile(data);
+
+    // 编译 Pug 为 HTML
+    const html = pug.render(pugContent, {
+      filename: path.join(__dirname, 'resume.pug'),
+      basedir: __dirname
+    });
+
+    return html;
+  } catch (error) {
+    console.error('预览生成错误:', error);
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>预览错误</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .error { color: red; background: #fee; padding: 20px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="error">
+    <h1>预览生成失败</h1>
+    <p>${error.message}</p>
+    <pre>${error.stack}</pre>
+  </div>
+</body>
+</html>
+    `;
+  }
+}
+
+
 // API: 生成 PDF（使用 ReLaXed）
 app.post('/api/generate-pdf', async (req, res) => {
   const resumePath = path.join(__dirname, 'resume.pug');
