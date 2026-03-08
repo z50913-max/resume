@@ -1,0 +1,429 @@
+/*[common]**********************************************************************************************************************************************************************/
+@page {
+	size: letter portrait;
+	margin: 0;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+:root {
+	--page-width: 8.5in;
+	--page-height: 11in;
+	--container-width: 6.4in;
+	--sidebar-width: calc(var(--page-width) - var(--container-width));
+	--decorator-horizontal-margin: 0.2in;
+
+	--sidebar-horizontal-padding: 0.2in;
+
+	/* XXX: using px for very good precision control */
+	--decorator-outer-offset-top: 10px;
+	--decorator-outer-offset-left: -5.5px;
+	--decorator-border-width: 1px;
+	--decorator-outer-dim: 9px;
+	--decorator-border: 1px solid #ccc;
+
+	--row-blocks-padding-top: 3pt;
+	--date-block-width: 0.8in;
+
+	--container-items-title-icon-offset-left: -19pt;
+}
+
+body {
+	width: var(--page-width);
+	height: var(--page-height);
+	margin: 0;
+	/*font-family: "Open Sans", sans-serif;*/
+	font-weight: 300;
+	line-height: 1.3;
+	color: #444;
+	hyphens: auto;
+}
+
+/*代码样式*/
+code {
+	/*background: rgba(255, 255, 255, 0.5);*/
+	color: #E91E63;
+	font-family: Monaco, 'Andale Mono', 'Courier New', 'Courier', monospace;
+	font-size: 90%;
+	padding: 0 2px;
+}
+
+/*列表小标题*/
+.description strong {
+	position: relative;
+	overflow: hidden;
+	border: 0;
+	font-weight: bold;
+}
+
+.description strong:after {
+	content: ".........................................................................................";
+	position: absolute;
+	top: 3px;
+	left: 0;
+	width: 100%;
+	overflow: hidden;
+	font-weight: normal;
+}
+
+/*[pages]**********************************************************************************************************************************************************************/
+
+.pages {
+	page-break-after: always;
+	height: var(--page-height);
+	position: relative;
+}
+
+.pages:last-child {
+	page-break-after: auto;
+}
+
+/*[container]**********************************************************************************************************************************************************************/
+
+.container {
+	/*float: left;*/
+	display: inline-block;
+	width: var(--container-width);
+	padding: 0.1in 0.1in 0 0;
+	font-size: 8pt;
+}
+
+/** big title **/
+.container > .header, h1, h2 {
+	text-transform: uppercase;
+}
+
+.container > .header {
+	position: relative;
+	left: 0.55in;
+	/*margin-bottom: 0.3in;*/
+	/*line-height: 1.2;*/
+}
+
+.container > .header h1 {
+	font-weight: 300;
+	font-size: 18pt;
+	/*line-height: 1.5;*/
+	margin: .33em 0;
+}
+
+.container > .header h1 strong {
+	margin: auto 2pt auto 4pt;
+	font-weight: 600;
+}
+
+.container > .header .subtitle {
+	font-size: 10pt;
+	font-weight: bold;
+	padding-bottom: 5px;
+}
+
+/*** categorial blocks ***/
+
+.container > .items {
+	/*margin-top: 0.1in;*/
+}
+
+.container > .items:not(.concise) .details div {
+	margin: 0.03in 0 0.05in 0;
+}
+
+.container > .items:not(.concise) .blocks:last-child .details div {
+	margin-bottom: 0;
+}
+
+.container > .items.concise .details div:not(.concise) {
+	/* use padding to work around the fact that margin doesn't affect floated
+	   neighboring elements */
+	padding: 0.02in 0 0.03in 0;
+}
+
+.container > .items h2 {
+	position: relative;
+	top: var(--row-blocks-padding-top);
+	/* XXX: 0.5px for aligning fx printing */
+	left: calc((var(--date-block-width) + var(--decorator-horizontal-margin)));
+	font-size: 12pt;
+	color: #555;
+	margin-bottom: 8px;
+	page-break-after: avoid; /* 防止标题与内容分离 */
+}
+
+.container > .items h2 > i {
+	/* use absolute position to prevent icon's width from misaligning title */
+	/* assigning a fixed width here is no better due to needing to align decorator
+	   line too */
+	position: absolute;
+	left: var(--container-items-title-icon-offset-left);
+	z-index: 1; /* over decorator line */
+	color: #444;
+}
+
+.container > .items h2::after { /* extends the decorator line */
+	height: calc(var(--row-blocks-padding-top) * 1);
+	position: relative;
+	top: calc(-1 * var(--row-blocks-padding-top));
+	/* XXX: 0.5px for aligning fx printing */
+	left: calc(-1 * var(--decorator-horizontal-margin));
+	display: block;
+	border-left: var(--decorator-border);
+	z-index: 0;
+	line-height: 0;
+	font-size: 0;
+	content: ' ';
+}
+
+/**** minor tweaks on the icon fonts ****/
+.container > .items h2 > .fa-graduation-cap {
+	left: calc(var(--container-items-title-icon-offset-left) - 2pt);
+	top: 2pt;
+}
+
+.container > .items h2 > .fa-suitcase {
+	top: 1pt;
+}
+
+.container > .items h2 > .fa-folder-open {
+	top: 1.5pt;
+}
+
+/**** individual row blocks (date - decorator - details) ****/
+
+.container > .items > .mixins {
+	display: flex;
+	flex-flow: row nowrap;
+}
+
+.container > .items > .mixins > div {
+	padding-top: var(--row-blocks-padding-top);
+}
+
+.container > .items > .mixins > .date {
+	flex: 0 0 var(--date-block-width);
+	padding-top: calc(var(--row-blocks-padding-top) + 2.5pt) !important;
+	padding-right: var(--decorator-horizontal-margin);
+	font-size: 7pt;
+	text-align: right;
+	line-height: 1;
+}
+
+.container > .items > .mixins > .date span {
+	display: block;
+}
+
+.container > .items > .mixins > .date span:nth-child(2)::before {
+	position: relative;
+	top: 1pt;
+	right: 5.5pt;
+	display: block;
+	height: 10pt;
+	content: '|';
+}
+
+.container > .items > .mixins .decorator {
+	flex: 0 0 0;
+	position: relative;
+	width: 2pt;
+	min-height: 100%;
+	border-left: var(--decorator-border);
+}
+
+/*
+ * XXX: Use two filled circles to achieve the circle-with-white-border effect.
+ * The normal technique of only using one pseudo element and
+ * border: 1px solid white; style makes firefox erroneously either:
+ * 1) overflows the grayshade background (if no background-clip is set), or
+ * 2) shows decorator line which should've been masked by the white border
+ *
+ */
+
+.container > .items > .mixins .decorator::before {
+	position: absolute;
+	top: var(--decorator-outer-offset-top);
+	left: var(--decorator-outer-offset-left);
+	content: ' ';
+	display: block;
+	width: var(--decorator-outer-dim);
+	height: var(--decorator-outer-dim);
+	border-radius: calc(var(--decorator-outer-dim) / 2);
+	background-color: #fff;
+}
+
+.container > .items > .mixins .decorator::after {
+	position: absolute;
+	top: calc(var(--decorator-outer-offset-top) + var(--decorator-border-width));
+	left: calc(var(--decorator-outer-offset-left) + var(--decorator-border-width));
+	content: ' ';
+	display: block;
+	width: calc(var(--decorator-outer-dim) - (var(--decorator-border-width) * 2));
+	height: calc(var(--decorator-outer-dim) - (var(--decorator-border-width) * 2));
+	border-radius: calc((var(--decorator-outer-dim) - (var(--decorator-border-width) * 2)) / 2);
+	background-color: #555;
+}
+
+.container > .items > .mixins:last-child .decorator { /* slightly shortens it */
+	margin-bottom: 0.25in;
+}
+
+/***** fine-tunes on the details block where the real juice is *****/
+
+.container > .items > .mixins {
+	flex: 1 0 0;
+	page-break-inside: avoid; /* 防止工作经历被截断 */
+}
+
+.container > .items > .mixins > .details {
+	flex: 1 0 0;
+	padding-left: var(--decorator-horizontal-margin);
+	padding-top: calc(var(--row-blocks-padding-top) - 0.5pt) !important; /* not sure why but this is needed for better alignment */
+}
+
+.container > .items > .mixins > .details header {
+	color: #000;
+}
+
+.container > .items > .mixins > .details h3 {
+	font-size: 10pt;
+}
+
+.container > .items > .mixins > .details .place {
+	margin-top: -16px;
+	font-size: 7.5pt;
+	float: right;
+}
+
+.container > .items > .mixins > .details .location {
+	margin-top: -16px;
+	float: right;
+}
+
+.container > .items > .mixins > .details div {
+	clear: both;
+}
+
+.container > .items > .mixins > .details .location::before {
+	display: inline-block;
+	position: relative;
+	right: 3pt;
+	top: 0.25pt;
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: inherit;
+	content: "\f041";
+}
+
+.container > .items > .mixins > .details .concise p {
+	margin: 2px;
+}
+
+.container > .items > .mixins > .details .concise ul {
+	margin: 0 !important;
+	-webkit-columns: 2;
+	-moz-columns: 2;
+	columns: 2;
+}
+
+.container > .items > .mixins > .details .concise li {
+	margin: 0 !important;
+}
+
+.container > .items > .mixins > .details .concise li {
+	margin-left: 0 !important;
+}
+
+/***** fine-tunes on the lists... *****/
+
+.container ul {
+	padding-left: 0.07in;
+	margin: 0.08in 0;
+}
+
+.container li {
+	margin: 0 0 0.025in 0;
+}
+
+/****** customize list symbol style ******/
+.container li::before {
+	position: relative;
+	margin-left: -4.25pt;
+	content: '• ';
+}
+
+/*[sidebar]**********************************************************************************************************************************************************************/
+.sidebar {
+	float: right;
+	display: inline-block;
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: var(--sidebar-width);
+	height: var(--page-height);
+	padding: 0.3in var(--sidebar-horizontal-padding);
+	background-color: #f2f2f2;
+	font-size: 8.5pt;
+}
+
+.sidebar .header {
+	border: white dotted 1px;
+	padding: 10px;
+}
+
+.sidebar .header img {
+	width: 80%;
+	margin-left: 10%;
+	margin-right: 10%;
+}
+
+.sidebar h1 {
+	font-weight: 400;
+	font-size: 11pt;
+}
+
+.sidebar .side-block {
+	margin-top: 0.2in;
+}
+
+.sidebar .contact ul {
+	margin-top: 0.05in;
+	padding-left: 0;
+	font-family: "Source Code Pro";
+	font-weight: 400;
+	line-height: 1.75;
+}
+
+.sidebar .contact li > i {
+	width: 9pt; /* for text alignment */
+	text-align: right;
+}
+
+.sidebar .skills {
+	line-height: 1.5;
+}
+
+.sidebar .skills ul {
+	margin: 0.05in 0 0.15in;
+	padding: 0;
+}
+
+.sidebar .disclaimer {
+	position: absolute;
+	bottom: var(--sidebar-horizontal-padding);
+	right: var(--sidebar-horizontal-padding);
+	font-size: 7.5pt;
+	font-style: italic;
+	line-height: 1.1;
+	text-align: right;
+	color: #777;
+}
+
+.sidebar .disclaimer code {
+	color: #666;
+	font-family: "Source Code Pro";
+	font-weight: 400;
+	font-style: normal;
+}
+
+/*[ended]**********************************************************************************************************************************************************************/

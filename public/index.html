@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简历编辑器</title>
+    <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+    <div class="container">
+        <div class="editor-panel">
+            <h1>简历编辑器</h1>
+
+            <div class="toolbar">
+                <button id="loadBtn" class="btn">加载数据</button>
+                <button id="saveBtn" class="btn">保存数据</button>
+                <button id="previewBtn" class="btn btn-primary">预览</button>
+                <button id="generateBtn" class="btn btn-success">生成 PDF</button>
+            </div>
+
+            <div class="form-section">
+                <h2>个人信息</h2>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="name" placeholder="张三">
+                </div>
+                <div class="form-group">
+                    <label>求职意向</label>
+                    <input type="text" id="title" placeholder="求职意向: 软件工程师">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>个人简介</h2>
+                <div id="profileFields"></div>
+            </div>
+
+            <div class="form-section">
+                <h2>开发技能</h2>
+                <div id="skillsFields"></div>
+                <button class="btn-small" onclick="addSkill()">+ 添加技能</button>
+            </div>
+
+            <div class="form-section">
+                <h2>技能证书</h2>
+                <div id="certificatesFields"></div>
+                <button class="btn-small" onclick="addCertificate()">+ 添加证书</button>
+            </div>
+
+            <div class="form-section">
+                <h2>联系方式</h2>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show_website" checked> 显示网站
+                    </label>
+                    <input type="text" id="contact_website" placeholder="www.example.com">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show_github" checked> 显示 GitHub
+                    </label>
+                    <input type="text" id="contact_github" placeholder="github.com/username">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show_email" checked> 显示邮箱
+                    </label>
+                    <input type="email" id="contact_email" placeholder="email@example.com">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show_wechat" checked> 显示微信
+                    </label>
+                    <input type="text" id="contact_wechat" placeholder="wechat_id">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show_phone" checked> 显示电话
+                    </label>
+                    <input type="text" id="contact_phone" placeholder="(+86)13800138000">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show_location" checked> 显示地址
+                    </label>
+                    <input type="text" id="contact_location" placeholder="城市">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>教育背景</h2>
+                <div id="educationFields"></div>
+                <button class="btn-small" onclick="addEducation()">+ 添加教育经历</button>
+            </div>
+
+            <div class="form-section">
+                <h2>工作经验</h2>
+                <div id="experienceFields"></div>
+                <button class="btn-small" onclick="addExperience()">+ 添加工作经历</button>
+            </div>
+
+            <div class="form-section">
+                <h2>校园经历</h2>
+                <div id="campusFields"></div>
+                <button class="btn-small" onclick="addCampus()">+ 添加校园经历</button>
+            </div>
+
+            <div class="form-section">
+                <h2>技能清单</h2>
+                <div class="form-group">
+                    <label>开发语言</label>
+                    <input type="text" id="skills_languages" placeholder="Java/Python/JavaScript">
+                </div>
+                <div class="form-group">
+                    <label>开发框架</label>
+                    <input type="text" id="skills_frameworks" placeholder="Spring/Django/React">
+                </div>
+                <div class="form-group">
+                    <label>运维开发</label>
+                    <input type="text" id="skills_devops" placeholder="Docker/Kubernetes/Jenkins">
+                </div>
+                <div class="form-group">
+                    <label>数据库</label>
+                    <input type="text" id="skills_databases" placeholder="MySQL/Redis/MongoDB">
+                </div>
+                <div class="form-group">
+                    <label>云平台</label>
+                    <input type="text" id="skills_cloud" placeholder="阿里云/腾讯云/AWS">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>个人总结</h2>
+                <div class="form-group">
+                    <textarea id="summary" rows="5" placeholder="简要介绍你的技能、经验和职业目标..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>结束语</h2>
+                <div class="form-group">
+                    <textarea id="disclaimer" rows="2" placeholder="感谢您花时间阅读我的简历..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div class="preview-header">
+                <h2>预览</h2>
+                <button id="closePreview" class="btn-close">×</button>
+            </div>
+            <iframe id="previewFrame"></iframe>
+        </div>
+    </div>
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>处理中...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
