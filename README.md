@@ -15,6 +15,10 @@ D:\doc260303\Desktop\doc1\rust3>npm --version
 - ✅ 一键生成 PDF 简历
 - ✅ 自动备份恢复机制
 - ✅ 支持动态添加/删除工作经历、教育背景等
+- <img width="950" height="1230" alt="image" src="https://github.com/user-attachments/assets/ba0369ef-585f-42cc-8dcf-499715315758" />
+<img width="950" height="1235" alt="image" src="https://github.com/user-attachments/assets/adb88aad-69ef-4d6f-acd2-bd6a0ee2f03c" />
+
+
 
 ## 快速开始
 
