@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm install jstransformer-markdown-it)",
-      "Bash(ls -la *.pug)"
-    ]
-  }
-}
