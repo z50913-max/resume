@@ -22,6 +22,7 @@ body {
     overflow-y: auto;
     padding: 20px;
     border-right: 1px solid #ddd;
+    position: relative;
 }
 
 .editor-panel h1 {
@@ -45,6 +46,12 @@ body {
     gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: white;
+    padding: 12px 0 16px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .btn {
@@ -277,6 +284,10 @@ body {
 
     .editor-panel {
         flex: 1;
+    }
+
+    .toolbar {
+        top: 0;
     }
 
     .preview-panel {
