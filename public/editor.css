@@ -134,6 +134,24 @@ body {
     min-height: 80px;
 }
 
+.field-help {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px dashed #cfd8e3;
+    border-radius: 4px;
+    background: #fff;
+    color: #5f6b7a;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.field-help code {
+    background: #f3f6f9;
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-family: Consolas, Monaco, monospace;
+}
+
 /* 动态字段容器 */
 .field-item {
     background: #f8f9fa;

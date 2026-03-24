@@ -180,8 +180,14 @@ function createExperienceField(exp, index) {
                 <input type="text" data-exp-index="${index}" data-exp-field="to" value="${exp.to}" placeholder="2022-12">
             </div>
             <div class="form-group">
-                <label>工作描述（每行一条）</label>
-                <textarea data-exp-index="${index}" data-exp-field="description" rows="5" placeholder="工作内容、项目经验等">${exp.description.join('\n')}</textarea>
+                <label>工作描述（每行一条，支持次级项）</label>
+                <textarea data-exp-index="${index}" data-exp-field="description" rows="5" placeholder="一级项直接写文字&#10;其他事项&#10;&gt; 门禁系统联调&#10;&gt; 监控与考勤设备排查">${exp.description.join('\n')}</textarea>
+                <div class="field-help">
+                    一级项直接写文字；二级项在行首输入 <code>&gt;</code>。<br>
+                    示例：<code>其他事项</code><br>
+                    <code>&gt; 门禁系统联调</code><br>
+                    <code>&gt; 监控与考勤设备排查</code>
+                </div>
             </div>
         </div>
     `;

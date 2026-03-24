@@ -348,8 +348,33 @@ code {
 /****** customize list symbol style ******/
 .container li::before {
 	position: relative;
-	margin-left: -4.25pt;
-	content: '• ';
+	display: inline-block;
+	width: 8pt;
+	margin-left: -8pt;
+	content: '•';
+}
+
+.container .description ul ul {
+	padding-left: calc(0.12in + 1em);
+	margin: 0.01in 0 0 0;
+}
+
+.container .description ul ul li {
+	margin: 0 !important;
+	line-height: 1.18;
+}
+
+.container .description ul ul li + li {
+	margin-top: 0.006in !important;
+}
+
+.container .description ul ul li::before {
+	display: inline-block;
+	width: 10pt;
+	margin-left: -10pt;
+	content: '-';
+	color: #888;
+	font-weight: 600;
 }
 
 /*[sidebar]**********************************************************************************************************************************************************************/
