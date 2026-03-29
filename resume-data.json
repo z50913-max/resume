@@ -36,6 +36,14 @@
       "wechat": "abcall",
       "phone": "(+86)15527798632",
       "location": "上海（可驻越南）"
+    },
+    "contactVisibility": {
+      "website": false,
+      "github": false,
+      "email": true,
+      "wechat": true,
+      "phone": true,
+      "location": true
     }
   },
   "education": [

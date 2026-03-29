@@ -7,39 +7,142 @@ const { generatePugFile } = require('./lib/pug-generator');
 
 const app = express();
 const PORT = 3000;
+const DEFAULT_RESUME_NAME = '__default__';
+const DEFAULT_DATA_PATH = path.join(__dirname, 'resume-data.json');
+const RESUMES_DIR = path.join(__dirname, 'resumes');
 
-// 中间件
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static('public'));
 app.use('/stylesheets', express.static('stylesheets'));
 app.use('/assets', express.static('assets'));
 
-// 加载默认简历数据
+function ensureResumesDir() {
+  if (!fs.existsSync(RESUMES_DIR)) {
+    fs.mkdirSync(RESUMES_DIR, { recursive: true });
+  }
+}
+
 function loadDefaultData() {
-  const dataPath = path.join(__dirname, 'resume-data.json');
-  if (fs.existsSync(dataPath)) {
-    return JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  if (fs.existsSync(DEFAULT_DATA_PATH)) {
+    return JSON.parse(fs.readFileSync(DEFAULT_DATA_PATH, 'utf8'));
   }
   return null;
 }
 
-// 首页 - 编辑器界面
+function sanitizeResumeName(name) {
+  const value = String(name || '').trim();
+  const withoutExt = value.replace(/\.json$/i, '');
+  const sanitized = withoutExt.replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
+
+  if (!sanitized || sanitized === '.' || sanitized === '..') {
+    return null;
+  }
+
+  return sanitized;
+}
+
+function getResumeFilePath(name) {
+  const safeName = sanitizeResumeName(name);
+  if (!safeName) {
+    return null;
+  }
+
+  return path.join(RESUMES_DIR, `${safeName}.json`);
+}
+
+function listResumeFiles() {
+  ensureResumesDir();
+
+  const files = fs.readdirSync(RESUMES_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.json'))
+    .map((entry) => {
+      const filename = entry.name;
+      const name = filename.replace(/\.json$/i, '');
+      return {
+        name,
+        filename,
+        label: name
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, 'zh-CN'));
+
+  return [
+    {
+      name: DEFAULT_RESUME_NAME,
+      filename: 'resume-data.json',
+      label: '默认简历'
+    },
+    ...files
+  ];
+}
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API: 获取默认数据
 app.get('/api/default-data', (req, res) => {
   const data = loadDefaultData();
   res.json(data);
 });
 
-// API: 预览简历（生成 HTML）
+app.get('/api/resumes', (req, res) => {
+  try {
+    res.json(listResumeFiles());
+  } catch (error) {
+    console.error('获取简历列表失败:', error);
+    res.status(500).json({ error: '获取简历列表失败' });
+  }
+});
+
+app.get('/api/resume/:name', (req, res) => {
+  try {
+    const requestedName = req.params.name;
+
+    if (requestedName === DEFAULT_RESUME_NAME) {
+      return res.json(loadDefaultData());
+    }
+
+    const resumePath = getResumeFilePath(requestedName);
+    if (!resumePath) {
+      return res.status(400).json({ error: '简历名称无效' });
+    }
+
+    if (!fs.existsSync(resumePath)) {
+      return res.status(404).json({ error: '简历文件不存在' });
+    }
+
+    const data = JSON.parse(fs.readFileSync(resumePath, 'utf8'));
+    res.json(data);
+  } catch (error) {
+    console.error('读取简历失败:', error);
+    res.status(500).json({ error: '读取简历失败' });
+  }
+});
+
+app.post('/api/resume/:name', (req, res) => {
+  try {
+    const resumePath = getResumeFilePath(req.params.name);
+    if (!resumePath) {
+      return res.status(400).json({ error: '简历名称无效' });
+    }
+
+    ensureResumesDir();
+    fs.writeFileSync(resumePath, JSON.stringify(req.body, null, 2), 'utf8');
+
+    res.json({
+      success: true,
+      name: path.basename(resumePath, '.json'),
+      filename: path.basename(resumePath)
+    });
+  } catch (error) {
+    console.error('保存简历失败:', error);
+    res.status(500).json({ error: '保存简历失败' });
+  }
+});
+
 app.post('/api/preview', async (req, res) => {
   try {
     const data = req.body;
-
-    // 生成简单的 HTML 预览
     const html = generatePreviewHTML(data);
     res.send(html);
   } catch (error) {
@@ -48,16 +151,11 @@ app.post('/api/preview', async (req, res) => {
   }
 });
 
-// 生成预览 HTML（使用实际的 CSS 样式）
 function generatePreviewHTML(data) {
   const pug = require('pug');
-  const { generatePugFile } = require('./lib/pug-generator');
 
   try {
-    // 生成 Pug 内容
     const pugContent = generatePugFile(data);
-
-    // 编译 Pug 为 HTML
     const html = pug.render(pugContent, {
       filename: path.join(__dirname, 'resume.pug'),
       basedir: __dirname
@@ -89,8 +187,6 @@ function generatePreviewHTML(data) {
   }
 }
 
-
-// API: 生成 PDF（使用 ReLaXed）
 app.post('/api/generate-pdf', async (req, res) => {
   const resumePath = path.join(__dirname, 'resume.pug');
   const backupPath = path.join(__dirname, 'resume.pug.backup');
@@ -99,21 +195,17 @@ app.post('/api/generate-pdf', async (req, res) => {
   try {
     const data = req.body;
 
-    // 1. 生成 Pug 文件内容
     console.log('正在生成 Pug 文件...');
     const pugContent = generatePugFile(data);
 
-    // 2. 备份原始 resume.pug
     if (fs.existsSync(resumePath)) {
       fs.copyFileSync(resumePath, backupPath);
       console.log('已备份原始 resume.pug');
     }
 
-    // 3. 写入新的 resume.pug
     fs.writeFileSync(resumePath, pugContent, 'utf8');
     console.log('已写入新的 resume.pug');
 
-    // 4. 调用 ReLaXed 生成 PDF
     console.log('正在调用 ReLaXed 生成 PDF...');
 
     await new Promise((resolve, reject) => {
@@ -123,18 +215,14 @@ app.post('/api/generate-pdf', async (req, res) => {
         shell: true
       });
 
-      let output = '';
       let pdfGenerated = false;
 
       child.stdout.on('data', (data) => {
         const text = data.toString();
-        output += text;
         console.log('ReLaXed:', text.trim());
 
-        // 检查 PDF 是否已生成
         if (text.includes('PDF written') || text.includes('Done in')) {
           pdfGenerated = true;
-          // 等待一小段时间确保文件写入完成
           setTimeout(() => {
             child.kill();
             resolve();
@@ -150,7 +238,6 @@ app.post('/api/generate-pdf', async (req, res) => {
         reject(new Error(`启动 ReLaXed 失败: ${error.message}`));
       });
 
-      // 设置超时
       setTimeout(() => {
         if (!pdfGenerated) {
           child.kill();
@@ -161,7 +248,6 @@ app.post('/api/generate-pdf', async (req, res) => {
 
     console.log('ReLaXed 进程已完成');
 
-    // 5. 读取生成的 PDF
     if (!fs.existsSync(pdfPath)) {
       throw new Error('PDF 文件未生成');
     }
@@ -169,21 +255,17 @@ app.post('/api/generate-pdf', async (req, res) => {
     const pdfBuffer = fs.readFileSync(pdfPath);
     console.log(`PDF 生成成功，大小: ${(pdfBuffer.length / 1024).toFixed(2)} KB`);
 
-    // 6. 恢复原始 resume.pug
     if (fs.existsSync(backupPath)) {
       fs.copyFileSync(backupPath, resumePath);
       fs.unlinkSync(backupPath);
       console.log('已恢复原始 resume.pug');
     }
 
-    // 7. 返回 PDF
     res.contentType('application/pdf');
     res.send(pdfBuffer);
-
   } catch (error) {
     console.error('生成 PDF 错误:', error);
 
-    // 恢复原始文件
     if (fs.existsSync(backupPath)) {
       fs.copyFileSync(backupPath, resumePath);
       fs.unlinkSync(backupPath);
@@ -197,7 +279,8 @@ app.post('/api/generate-pdf', async (req, res) => {
   }
 });
 
-// 启动服务器
+ensureResumesDir();
+
 app.listen(PORT, () => {
   console.log(`简历编辑器已启动: http://localhost:${PORT}`);
   console.log('按 Ctrl+C 停止服务器');
