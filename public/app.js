@@ -4,6 +4,17 @@ let currentResumeName = null;
 const DEFAULT_RESUME_NAME = '__default__';
 const LOCAL_DRAFT_KEY = 'resumeData';
 const CONTACT_FIELDS = ['website', 'github', 'email', 'wechat', 'phone', 'location'];
+const DEFAULT_SKILL_SECTION = {
+    title: '核心技能',
+    enabled: true
+};
+const DEFAULT_SKILL_LIST_ITEMS = [
+    { label: '开发语言', value: '' },
+    { label: '开发框架', value: '' },
+    { label: '运维开发', value: '' },
+    { label: '数据库', value: '' },
+    { label: '云平台', value: '' }
+];
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadDefaultData();
@@ -55,6 +66,61 @@ function normalizeContactVisibility(personal = {}) {
         }
         return result;
     }, {});
+}
+
+function normalizeSkillsList(skillsList = {}) {
+    if (Array.isArray(skillsList)) {
+        return skillsList.map((item) => ({
+            label: String(item?.label ?? '').trim(),
+            value: String(item?.value ?? '').trim()
+        }));
+    }
+
+    if (!skillsList || Object.keys(skillsList).length === 0) {
+        return DEFAULT_SKILL_LIST_ITEMS.map((item) => ({ ...item }));
+    }
+
+    const keyMap = [
+        ['languages', '开发语言'],
+        ['frameworks', '开发框架'],
+        ['devops', '运维开发'],
+        ['databases', '数据库'],
+        ['cloud', '云平台']
+    ];
+    const knownKeys = new Set(keyMap.map(([key]) => key));
+    const normalized = keyMap.map(([key, label]) => ({
+        label,
+        value: String(skillsList[key] ?? '').trim()
+    }));
+
+    Object.entries(skillsList).forEach(([key, item]) => {
+        if (knownKeys.has(key)) {
+            return;
+        }
+
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+            normalized.push({
+                label: String(item.label ?? key).trim() || key,
+                value: String(item.value ?? '').trim()
+            });
+        } else if (String(item ?? '').trim()) {
+            normalized.push({
+                label: key,
+                value: String(item).trim()
+            });
+        }
+    });
+
+    return normalized.length > 0 ? normalized : DEFAULT_SKILL_LIST_ITEMS.map((item) => ({ ...item }));
+}
+
+function normalizeSkillsSection(personal = {}) {
+    const section = personal.skillsSection || {};
+
+    return {
+        title: String(section.title ?? DEFAULT_SKILL_SECTION.title).trim() || DEFAULT_SKILL_SECTION.title,
+        enabled: typeof section.enabled === 'boolean' ? section.enabled : DEFAULT_SKILL_SECTION.enabled
+    };
 }
 
 function escapeHtml(value) {
@@ -120,6 +186,10 @@ function populateForm(data) {
 
     renderProfileFields(normalizeProfileItems(data.personal || {}));
 
+    const skillsSection = normalizeSkillsSection(data.personal || {});
+    document.getElementById('skills_section_title').value = skillsSection.title;
+    document.getElementById('skills_section_enabled').checked = skillsSection.enabled;
+
     const skillsFields = document.getElementById('skillsFields');
     skillsFields.innerHTML = '';
     data.personal.skills.forEach((skill, index) => {
@@ -165,11 +235,7 @@ function populateForm(data) {
         campusFields.innerHTML += createCampusField(campus, index);
     });
 
-    document.getElementById('skills_languages').value = data.skillsList.languages || '';
-    document.getElementById('skills_frameworks').value = data.skillsList.frameworks || '';
-    document.getElementById('skills_devops').value = data.skillsList.devops || '';
-    document.getElementById('skills_databases').value = data.skillsList.databases || '';
-    document.getElementById('skills_cloud').value = data.skillsList.cloud || '';
+    renderSkillsListFields(normalizeSkillsList(data.skillsList));
 
     document.getElementById('summary').value = data.summary || '';
     document.getElementById('disclaimer').value = data.disclaimer || '';
@@ -184,6 +250,45 @@ function createSkillField(skill, index) {
             </div>
         </div>
     `;
+}
+
+function createSkillListField(item, index) {
+    const labelValue = escapeHtml(item.label);
+    const fieldValue = escapeHtml(item.value);
+
+    return `
+        <div class="field-item" data-skill-list-item>
+            <button class="remove-btn" onclick="removeSkillListItem(${index})">×</button>
+            <div class="form-group">
+                <label>字段名</label>
+                <input type="text" data-skill-list-index="${index}" data-skill-list-field="label" value="${labelValue}" placeholder="例如：开发语言">
+            </div>
+            <div class="form-group">
+                <label>字段内容</label>
+                <input type="text" data-skill-list-index="${index}" data-skill-list-field="value" value="${fieldValue}" placeholder="例如：Windows/Linux">
+            </div>
+        </div>
+    `;
+}
+
+function renderSkillsListFields(items) {
+    const skillsListFields = document.getElementById('skillsListFields');
+    skillsListFields.innerHTML = '';
+    items.forEach((item, index) => {
+        skillsListFields.innerHTML += createSkillListField(item, index);
+    });
+}
+
+function getSkillsListFromForm() {
+    return Array.from(document.querySelectorAll('[data-skill-list-item]')).map((item) => {
+        const labelInput = item.querySelector('[data-skill-list-field="label"]');
+        const valueInput = item.querySelector('[data-skill-list-field="value"]');
+
+        return {
+            label: labelInput ? labelInput.value.trim() : '',
+            value: valueInput ? valueInput.value.trim() : ''
+        };
+    });
 }
 
 function createCertificateField(cert, index) {
@@ -256,6 +361,7 @@ function createExperienceField(exp, index) {
 }
 
 function createCampusField(campus, index) {
+    const visibleChecked = campus.visible !== false ? 'checked' : '';
     return `
         <div class="field-item">
             <button class="remove-btn" onclick="removeCampus(${index})">×</button>
@@ -279,6 +385,12 @@ function createCampusField(campus, index) {
                 <label>描述（每行一条）</label>
                 <textarea data-campus-index="${index}" data-campus-field="description" rows="3" placeholder="详细描述">${campus.description.join('\n')}</textarea>
             </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" data-campus-index="${index}" data-campus-field="visible" ${visibleChecked} style="width:auto; margin-right:8px;">
+                    显示到 PDF
+                </label>
+            </div>
         </div>
     `;
 }
@@ -287,6 +399,12 @@ function addSkill() {
     const container = document.getElementById('skillsFields');
     const index = container.children.length;
     container.innerHTML += createSkillField('', index);
+}
+
+function addSkillListItem() {
+    const items = getSkillsListFromForm();
+    items.push({ label: '', value: '' });
+    renderSkillsListFields(items.length > 0 ? items : DEFAULT_SKILL_LIST_ITEMS.map((item) => ({ ...item })));
 }
 
 function addProfileField() {
@@ -318,12 +436,18 @@ function addExperience() {
 function addCampus() {
     const container = document.getElementById('campusFields');
     const index = container.children.length;
-    const campus = { title: '', place: '', from: '', to: '', description: [] };
+    const campus = { title: '', place: '', from: '', to: '', description: [], visible: true };
     container.innerHTML += createCampusField(campus, index);
 }
 
 function removeSkill(index) {
     document.querySelector(`[data-skill-index="${index}"]`).closest('.field-item').remove();
+}
+
+function removeSkillListItem(index) {
+    const items = getSkillsListFromForm();
+    items.splice(index, 1);
+    renderSkillsListFields(items.length > 0 ? items : DEFAULT_SKILL_LIST_ITEMS.map((item) => ({ ...item })));
 }
 
 function removeCertificate(index) {
@@ -365,6 +489,10 @@ function collectFormData() {
             avatar: './assets/coam.png',
             profile: {},
             profileItems,
+            skillsSection: {
+                title: document.getElementById('skills_section_title').value.trim() || DEFAULT_SKILL_SECTION.title,
+                enabled: document.getElementById('skills_section_enabled').checked
+            },
             skills: [],
             certificates: [],
             contact: {
@@ -380,13 +508,12 @@ function collectFormData() {
         education: [],
         experience: [],
         campus: [],
-        skillsList: {
-            languages: document.getElementById('skills_languages').value,
-            frameworks: document.getElementById('skills_frameworks').value,
-            devops: document.getElementById('skills_devops').value,
-            databases: document.getElementById('skills_databases').value,
-            cloud: document.getElementById('skills_cloud').value
-        },
+        skillsList: getSkillsListFromForm()
+            .map((item) => ({
+                label: item.label,
+                value: item.value
+            }))
+            .filter((item) => item.label || item.value),
         summary: document.getElementById('summary').value,
         disclaimer: document.getElementById('disclaimer').value
     };
@@ -446,12 +573,14 @@ function collectFormData() {
     });
 
     campusIndices.forEach(index => {
+        const visibleInput = document.querySelector(`[data-campus-index="${index}"][data-campus-field="visible"]`);
         const campus = {
             title: document.querySelector(`[data-campus-index="${index}"][data-campus-field="title"]`).value,
             place: document.querySelector(`[data-campus-index="${index}"][data-campus-field="place"]`).value,
             from: document.querySelector(`[data-campus-index="${index}"][data-campus-field="from"]`).value,
             to: document.querySelector(`[data-campus-index="${index}"][data-campus-field="to"]`).value,
-            description: document.querySelector(`[data-campus-index="${index}"][data-campus-field="description"]`).value.split('\n').filter(line => line.trim())
+            description: document.querySelector(`[data-campus-index="${index}"][data-campus-field="description"]`).value.split('\n').filter(line => line.trim()),
+            visible: visibleInput ? visibleInput.checked : true
         };
         data.campus.push(campus);
     });

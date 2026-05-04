@@ -24,7 +24,8 @@ function ensureResumesDir() {
 
 function loadDefaultData() {
   if (fs.existsSync(DEFAULT_DATA_PATH)) {
-    return JSON.parse(fs.readFileSync(DEFAULT_DATA_PATH, 'utf8'));
+    const raw = fs.readFileSync(DEFAULT_DATA_PATH, 'utf8').replace(/^\uFEFF/, '');
+    return JSON.parse(raw);
   }
   return null;
 }
@@ -111,7 +112,8 @@ app.get('/api/resume/:name', (req, res) => {
       return res.status(404).json({ error: '简历文件不存在' });
     }
 
-    const data = JSON.parse(fs.readFileSync(resumePath, 'utf8'));
+    const raw = fs.readFileSync(resumePath, 'utf8').replace(/^\uFEFF/, '');
+    const data = JSON.parse(raw);
     res.json(data);
   } catch (error) {
     console.error('读取简历失败:', error);
